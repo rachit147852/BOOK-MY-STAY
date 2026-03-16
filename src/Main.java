@@ -50,7 +50,7 @@ class RoomSearchService {
 }
 
 /* Main Class */
-public class RoomInitialization {
+public class Main {
 
     public static void main(String[] args) {
 
