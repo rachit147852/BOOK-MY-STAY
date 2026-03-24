@@ -1,53 +1,70 @@
 import java.util.*;
 
-/* Custom Exception */
-class InvalidBookingException extends Exception {
-    public InvalidBookingException(String message) {
-        super(message);
+/* Reservation Class */
+class Reservation {
+
+    String reservationId;
+    String guestName;
+    String roomType;
+    String roomId;
+
+    public Reservation(String reservationId, String guestName, String roomType, String roomId) {
+        this.reservationId = reservationId;
+        this.guestName = guestName;
+        this.roomType = roomType;
+        this.roomId = roomId;
     }
 }
 
-/* Validator */
-class BookingValidator {
+/* Cancellation Service */
+class CancellationService {
 
-    public static void validate(String roomType, Map<String, Integer> inventory)
-            throws InvalidBookingException {
-
-        if (!inventory.containsKey(roomType)) {
-            throw new InvalidBookingException("Invalid Room Type: " + roomType);
-        }
-
-        if (inventory.get(roomType) <= 0) {
-            throw new InvalidBookingException("No availability for room type: " + roomType);
-        }
-    }
-}
-
-/* Booking Service */
-class BookingService {
-
+    // Inventory
     Map<String, Integer> inventory = new HashMap<>();
 
-    public BookingService() {
+    // Active bookings
+    Map<String, Reservation> bookings = new HashMap<>();
+
+    // Stack for rollback (released room IDs)
+    Stack<String> rollbackStack = new Stack<>();
+
+    public CancellationService() {
         inventory.put("Single", 1);
-        inventory.put("Double", 0);
-        inventory.put("Suite", 2);
+        inventory.put("Double", 1);
+        inventory.put("Suite", 1);
+
+        // Pre-existing confirmed bookings
+        bookings.put("R1", new Reservation("R1", "Alice", "Single", "S101"));
+        bookings.put("R2", new Reservation("R2", "Bob", "Double", "D201"));
     }
 
-    public void bookRoom(String guestName, String roomType) {
+    public void cancelBooking(String reservationId) {
 
-        try {
-            BookingValidator.validate(roomType, inventory);
-
-            // If validation passes
-            inventory.put(roomType, inventory.get(roomType) - 1);
-
-            System.out.println("Booking Confirmed for " + guestName +
-                    " | Room Type: " + roomType);
-
-        } catch (InvalidBookingException e) {
-            System.out.println("Booking Failed: " + e.getMessage());
+        if (!bookings.containsKey(reservationId)) {
+            System.out.println("Cancellation Failed: Reservation not found");
+            return;
         }
+
+        Reservation r = bookings.get(reservationId);
+
+        // Push room ID into rollback stack
+        rollbackStack.push(r.roomId);
+
+        // Restore inventory
+        inventory.put(r.roomType, inventory.get(r.roomType) + 1);
+
+        // Remove booking
+        bookings.remove(reservationId);
+
+        System.out.println("Cancellation Successful:");
+        System.out.println("Reservation ID: " + reservationId);
+        System.out.println("Released Room ID: " + r.roomId);
+        System.out.println("Inventory Restored for: " + r.roomType);
+        System.out.println("-----------------------------------");
+    }
+
+    public void showRollbackStack() {
+        System.out.println("\nRollback Stack (Recently Released Rooms): " + rollbackStack);
     }
 }
 
@@ -56,17 +73,16 @@ public class RoomInitialization {
 
     public static void main(String[] args) {
 
-        System.out.println("BOOK MY STAY APP - Error Handling v9.0\n");
+        System.out.println("BOOK MY STAY APP - Cancellation v10.0\n");
 
-        BookingService service = new BookingService();
+        CancellationService service = new CancellationService();
 
-        // Valid booking
-        service.bookRoom("Alice", "Single");
+        // Valid cancellation
+        service.cancelBooking("R1");
 
-        // Invalid room type
-        service.bookRoom("Bob", "Deluxe");
+        // Invalid cancellation
+        service.cancelBooking("R3");
 
-        // No availability
-        service.bookRoom("Charlie", "Double");
+        service.showRollbackStack();
     }
 }
