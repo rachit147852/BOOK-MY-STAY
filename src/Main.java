@@ -1,83 +1,76 @@
-abstract class Room {
 
-    protected String roomType;
-    protected int beds;
-    protected double size;
-    protected double price;
+import java.util.*;
 
-    public Room(String roomType, int beds, double size, double price) {
-        this.roomType = roomType;
-        this.beds = beds;
-        this.size = size;
-        this.price = price;
+/* Service Class */
+class Service {
+
+    String serviceName;
+    double cost;
+
+    public Service(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
     }
 
-    public void displayRoomDetails() {
-        System.out.println("Room Type : " + roomType);
-        System.out.println("Beds      : " + beds);
-        System.out.println("Size      : " + size + " sq.ft");
-        System.out.println("Price     : ₹" + price + " per night");
+    public void displayService() {
+        System.out.println(serviceName + " - ₹" + cost);
     }
 }
 
+/* Add-On Service Manager */
+class AddOnServiceManager {
 
-/* Single Room */
-class SingleRoom extends Room {
+    // Map<ReservationID, List of Services>
+    private Map<String, List<Service>> serviceMap = new HashMap<>();
 
-    public SingleRoom() {
-        super("Single Room", 1, 200, 2500);
+    public void addService(String reservationId, Service service) {
+
+        serviceMap
+                .computeIfAbsent(reservationId, k -> new ArrayList<>())
+                .add(service);
+
+        System.out.println("Added service to Reservation " + reservationId);
+    }
+
+    public void displayServices(String reservationId) {
+
+        List<Service> services = serviceMap.get(reservationId);
+
+        if (services == null || services.isEmpty()) {
+            System.out.println("No services added.");
+            return;
+        }
+
+        double totalCost = 0;
+
+        System.out.println("\nServices for Reservation " + reservationId + ":\n");
+
+        for (Service s : services) {
+            s.displayService();
+            totalCost += s.cost;
+        }
+
+        System.out.println("\nTotal Add-On Cost: ₹" + totalCost);
     }
 }
 
-
-/* Double Room */
-class DoubleRoom extends Room {
-
-    public DoubleRoom() {
-        super("Double Room", 2, 350, 4000);
-    }
-}
-
-
-/* Suite Room */
-class SuiteRoom extends Room {
-
-    public SuiteRoom() {
-        super("Suite Room", 3, 550, 7500);
-    }
-}
-
-
-/* Main Class for Use Case 2 */
-public class UseCase2RoomInitialization {
+/* Main Class */
+public class RoomInitialization {
 
     public static void main(String[] args) {
 
-        System.out.println("====================================");
-        System.out.println("        BOOK MY STAY APP");
-        System.out.println("     Hotel Booking System v2.1");
-        System.out.println("====================================");
+        System.out.println("BOOK MY STAY APP - Add-On Services v7.0\n");
 
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        AddOnServiceManager manager = new AddOnServiceManager();
 
-        int singleAvailability = 5;
-        int doubleAvailability = 3;
-        int suiteAvailability = 2;
+        String reservationId = "R101";
 
-        System.out.println("\nAvailable Room Types\n");
+        // Add services
+        manager.addService(reservationId, new Service("Breakfast", 500));
+        manager.addService(reservationId, new Service("Airport Pickup", 1200));
+        manager.addService(reservationId, new Service("Spa Access", 1500));
 
-        single.displayRoomDetails();
-        System.out.println("Available Rooms: " + singleAvailability);
-        System.out.println("------------------------------------");
-
-        doubleRoom.displayRoomDetails();
-        System.out.println("Available Rooms: " + doubleAvailability);
-        System.out.println("------------------------------------");
-
-        suite.displayRoomDetails();
-        System.out.println("Available Rooms: " + suiteAvailability);
-        System.out.println("------------------------------------");
+        // Display services
+        manager.displayServices(reservationId);
     }
 }
